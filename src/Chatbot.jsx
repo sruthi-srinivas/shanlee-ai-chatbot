@@ -1,4 +1,7 @@
+
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import "./Chatbot.css";
 
 function Chatbot() {
@@ -22,15 +25,20 @@ function Chatbot() {
     setLoading(true);
 
     try {
-      const response = await fetch("https://shanlee-ai-chatbot.onrender.com/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          message: userMessage
-        })
-      });
+      const response = await fetch(
+        "https://shanlee-ai-chatbot.onrender.com/chat",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ message: userMessage })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Server request failed");
+      }
 
       const data = await response.json();
 
@@ -58,7 +66,6 @@ function Chatbot() {
 
   const handleCloseChat = () => {
     setIsOpen(false);
-    // Keep the welcome popup visible again when closing the chat
     setShowWelcome(true);
   };
 
@@ -69,7 +76,6 @@ function Chatbot() {
 
   return (
     <div className="chatbot-container">
-      {/* 1. Welcome popup before user opens chat */}
       {!isOpen && showWelcome && (
         <div className="welcome-popup" onClick={handleOpenChat}>
           <span className="welcome-text">
@@ -85,14 +91,12 @@ function Chatbot() {
         </div>
       )}
 
-      {/* 2. Floating Round Chat Icon (hidden while window is open to avoid duplicate close buttons) */}
       {!isOpen && (
         <button
           className="chat-icon-btn"
           onClick={handleOpenChat}
           aria-label="Open chat"
         >
-          {/* Clean speech bubble SVG icon */}
           <svg
             className="chat-svg-icon"
             viewBox="0 0 24 24"
@@ -107,14 +111,12 @@ function Chatbot() {
         </button>
       )}
 
-      {/* 3. Compact Chat Window with only one clean close button */}
       {isOpen && (
         <div className="chat-window">
-          {/* Header */}
           <div className="chat-header">
             <div className="chat-header-info">
               <span className="status-dot"></span>
-              <h3>AI Assistant</h3>
+              <h3>Shanlee AI Assistant</h3>
             </div>
             <button
               className="chat-close-btn"
@@ -125,17 +127,22 @@ function Chatbot() {
             </button>
           </div>
 
-          {/* Messages */}
           <div className="chat-messages">
             {messages.length === 0 && (
               <p className="welcome-message">
-                Hello! 👋 Ask me anything.
+                Hello! 👋 How can I help you with Shanlee AI Solutions?
               </p>
             )}
 
             {messages.map((msg, index) => (
               <div key={index} className={`message ${msg.sender}`}>
-                {msg.text}
+                {msg.sender === "bot" ? (
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {msg.text}
+                  </ReactMarkdown>
+                ) : (
+                  msg.text
+                )}
               </div>
             ))}
 
@@ -146,11 +153,10 @@ function Chatbot() {
             )}
           </div>
 
-          {/* Input */}
           <div className="chat-input">
             <input
               type="text"
-              placeholder="Type your message..."
+              placeholder="Ask about Shanlee AI..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={(e) => {
